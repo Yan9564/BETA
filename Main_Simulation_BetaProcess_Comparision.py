@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pickle
 import time
+from joblib import Parallel, delayed
+import os
 
 # import some self defined function
 from ComparisonSimulation import ComparisonSimulation
@@ -29,7 +31,6 @@ b = 0.6
 m = 100
 n = 100
 w = 7.5
-S = 1000
 ini_values = np.zeros((n,2))
 for i in range(n):
     # the first place saves the initial value of degradation time
@@ -37,65 +38,91 @@ for i in range(n):
     ini_values[i][1] = 0
     
 #%%
-# lifetime
+# Parallel Simulation
+# lifetime simulation
 
-# Record the start time
-start_time = time.time()
+def run_one_rep(s, tau, alpha, be, b, m, n, w, ini_values, save_dir, max_retry=100):
+    os.environ.setdefault("OMP_NUM_THREADS", "1")
+    os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+    os.environ.setdefault("MKL_NUM_THREADS", "1")
+    os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
 
-for s in range(1, S + 1):
+    data_fit = 'LifeData'
+    tries = 0
     while True:
-        data_fit = 'LifeData'
         resultsL, flag_iteration_L = ComparisonSimulation(tau, alpha, be, b, m, n, w, data_fit, ini_values)
-        
-        # check flag
         if flag_iteration_L != 2:
-            # save
-            with open(save_path + f'\\resultsL_rep{s}.pkl', 'wb') as file:
-                pickle.dump(resultsL, file)
-            print(f"save {s} iteration。")
-            break 
-        else:
-            print(f"not saving {s} iteration...")
+            out_path = os.path.join(save_dir, f"resultsL_rep{s}.pkl")
+            with open(out_path, "wb") as f:
+                pickle.dump(resultsL, f)
+            return s, out_path
+        tries += 1
+        if tries >= max_retry:
+            return s, None
 
+def main():
+    S = 1000
+    save_dir = r'F:\12-Frechect-TANG\results-v4\simulation'
+    os.makedirs(save_dir, exist_ok=True)
 
-# Record the end time
-end_time = time.time()
+    start = time.time()
+    results = Parallel(n_jobs=5, prefer="processes", verbose=10)(
+        delayed(run_one_rep)(s, tau, alpha, be, b, m, n, w, ini_values, save_dir)
+        for s in range(1, S+1)
+    )
+    ok = sum(1 for _, p in results if p is not None)
+    print(f"Saved {ok}/{S} results; elapsed {time.time()-start:.2f}s")
 
-# Calculate the elapsed time
-elapsed_time = end_time - start_time
-
-print(f"Elapsed time: {elapsed_time} seconds")
+if __name__ == "__main__":
+    main()
 #%%
+# Parallel Simulation
 # degradation
-# Record the start time
-start_time = time.time()
 
-for s in range(1, S+1):
+def run_one_rep(s, tau, alpha, be, b, m, n, w, ini_values, save_dir, max_retry=100):
+    os.environ.setdefault("OMP_NUM_THREADS", "1")
+    os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+    os.environ.setdefault("MKL_NUM_THREADS", "1")
+    os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
+
+    data_fit = 'DegradationData'
+    tries = 0
     while True:
-        data_fit = 'DegradationData'
         resultsD, flag_iteration_D = ComparisonSimulation(tau, alpha, be, b, m, n, w, data_fit, ini_values)
-        
         if flag_iteration_D != 0:
-            with open(save_path + f'\\resultsD_rep{s}.pkl', 'wb') as file:
-                pickle.dump(resultsD, file)
-            print(f"save {s} iteration。")
-            break
-        else:
-            print(f"not saving {s} iteration...")
+            out_path = os.path.join(save_dir, f"resultsD_rep{s}.pkl")
+            with open(out_path, "wb") as f:
+                pickle.dump(resultsL, f)
+            return s, out_path
+        tries += 1
+        if tries >= max_retry:
+            return s, None
 
+def main():
+    S = 1000
+    save_dir = r'path'
+    os.makedirs(save_dir, exist_ok=True)
 
-# Record the end time
-end_time = time.time()
+    start = time.time()
+    results = Parallel(n_jobs=5, prefer="processes", verbose=10)(
+        delayed(run_one_rep)(s, tau, alpha, be, b, m, n, w, ini_values, save_dir)
+        for s in range(1, S+1)
+    )
+    ok = sum(1 for _, p in results if p is not None)
+    print(f"Saved {ok}/{S} results; elapsed {time.time()-start:.2f}s")
 
-# Calculate the elapsed time
-elapsed_time = end_time - start_time
-
-print(f"Elapsed time: {elapsed_time} seconds")
+if __name__ == "__main__":
+    main()
 
 # %% 
 
 # compare the approximated PFT with the empirical PFT for one repliation of simulation
+data_fit = 'LifeData'
+resultsL, flag_iteration_L = ComparisonSimulation(tau, alpha, be, b, m, n, w, data_fit, ini_values)
+data_fit = 'DegradationData'
+resultsD, flag_iteration_D = ComparisonSimulation(tau, alpha, be, b, m, n, w, data_fit, ini_values)
 
+# plot
 
 plt.rcParams["figure.figsize"] = (4.8, 2.8)
 fig = plt.figure(dpi=300)
