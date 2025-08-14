@@ -35,7 +35,7 @@ x = pd.read_excel(path_x+'.xlsx').to_numpy()[:,1:]
 
 n = x.shape[0]
 m = x.shape[1]
-w = 2.8267105247915163 # this is from the Main_Case_Fatigue3P_preprocess
+w = 2.8267105247915163 
 
 #%%
 
@@ -247,5 +247,6 @@ plt.ylim([-0.05,1.05])
 plt.xlim([0,18])
 plt.legend()
 plt.tight_layout()
+
 
 
