@@ -26,7 +26,7 @@ from BetaProcessEstimateDiscrete import BetaProcessEstimateDiscrete
 # df_est_point: saves the parameters estimation results, only for point estimation
 # df_est_ci: saves the parameters estimation results, only for the interval estimation
 
-S = 10
+S = 1000
 tau = 1
 m = 40
 scale = 1
@@ -109,5 +109,6 @@ end_time = time.time()
 
 # Calculate the elapsed time
 elapsed_time = end_time - start_time
+
 
 print(f"Elapsed time: {elapsed_time} seconds")
