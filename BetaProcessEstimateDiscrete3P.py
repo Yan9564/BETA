@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jun 14 16:04:46 2024
-
-@author: yanbi
-"""
-
 import numpy as np
 from scipy.optimize import minimize
 import time
@@ -221,5 +214,6 @@ def BetaProcessEstimateDiscrete3P(x,t,method,num,tau):
         SIGMA[2,2] = np.var(b_bstrap)
         end_time = time.perf_counter()
         run_time = end_time - start_time
+
 
     return alpha_est, beta_est, b_est, SIGMA, run_time, idx
